@@ -1,0 +1,43 @@
+#!/bin/bash
+# MTPLX 本地栈一键启动器（macOS .command）
+# 同时拉起 MTPLX 守护进程（仅回环）与容器桥接中继。
+# 用法：复制为 ~/Desktop/start-mtplx-stack.command，编辑下方变量，chmod +x 后双击运行。
+# ⚠️ 生产环境建议改用 launchd 托管（见 docs/REPRODUCTION.md）；本文件适合桌面手动拉起。
+
+set -euo pipefail
+
+# ===== 按你的环境修改 =====
+MTRLX_BIN="/ABS/PATH/TO/your/python/venv/bin/mtplx"
+GEN_MODEL=Youssofal/Qwen3.8-27B-MTPLX-Optimized-Quality
+EMB_MODEL=mlx-community/Qwen3-Embedding-4B-4bit-DWQ
+RELAY_BIN="/ABS/PATH/TO/your/python3"
+RELAY_SCRIPT="/ABS/PATH/TO/scripts/mtplx-relay.py"
+RELAY_BIND_IP="192.168.139.3"   # 改为 ifconfig bridge100 的真实 IP
+export HF_ENDPOINT=https://hf-mirror.com
+
+API_KEY_FILE=~/.mtplx/api-key
+[ -f "$API_KEY_FILE" ] || { mkdir -p ~/.mtplx && openssl rand -hex 16 > "$API_KEY_FILE" && chmod 600 "$API_KEY_FILE"; }
+API_KEY="$(cat "$API_KEY_FILE")"
+
+# —— 幂等：仅回环 8000 已监听则跳过起服务 ——
+if lsof -nP -iTCP:8000 -sTCP:LISTEN 2>/dev/null | grep -q "127.0.0.1:8000"; then
+  echo "[launcher] MTPLX 已在 127.0.0.1:8000 运行，复用。"
+else
+  echo "[launcher] 启动 MTPLX ..."
+  mkdir -p ~/.mtplx/logs
+  nohup "$MTRLX_BIN" serve --model "$GEN_MODEL" --embedding-model "$EMB_MODEL" \
+    --host 127.0.0.1 --port 8000 --api-key "$API_KEY" \
+    > ~/.mtplx/logs/mtplx.out.log 2>&1 &
+fi
+
+# —— 中继：桥接私有 IP -> 回环 8000 ——
+if lsof -nP -iTCP:8000 -sTCP:LISTEN 2>/dev/null | grep -q "$RELAY_BIND_IP:8000"; then
+  echo "[launcher] 中继已在 $RELAY_BIND_IP:8000 运行，复用。"
+else
+  echo "[launcher] 启动中继 绑定 $RELAY_BIND_IP:8000 ..."
+  mkdir -p ~/.mtplx/logs
+  MTPLX_RELAY_BIND_IP="$RELAY_BIND_IP" MTPLX_RELAY_PORT=8000 MTPLX_BACKEND_PORT=8000 \
+    nohup "$RELAY_BIN" "$RELAY_SCRIPT" > ~/.mtplx/logs/relay.out.log 2>&1 &
+fi
+
+echo "[launcher] 启动完成。MTPLX=127.0.0.1:8000  中继=$RELAY_BIND_IP:8000"

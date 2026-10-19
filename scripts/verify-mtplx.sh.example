@@ -1,0 +1,24 @@
+#!/bin/bash
+# MTPLX 双模型全链路一键验收脚本
+# 用法：编辑下方 PYTHON 变量后 `bash verify-mtplx.sh`
+set -e
+API_KEY=$(cat ~/.mtplx/api-key)
+# 受管 Python 解释器（用于解析 JSON）；按你的环境修改
+PYTHON=/ABS/PATH/TO/your/python/versions/3.13.12/bin/python3
+
+echo "=== 1. 探活与认证 ==="
+curl -s -o /dev/null -w "HTTP %{http_code}\n" -H "Authorization: Bearer $API_KEY" http://127.0.0.1:8000/v1/models
+
+echo "=== 2. 嵌入向量实测 (Qwen3-Embedding-4B) ==="
+curl -s -X POST http://127.0.0.1:8000/v1/embeddings \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"mlx-community/Qwen3-Embedding-4B-4bit-DWQ","input":["验证向量维度"]}' \
+  | "$PYTHON" -c 'import sys, json; d=json.load(sys.stdin); print("维度:", len(d["data"][0]["embedding"]))'
+
+echo "=== 3. 生成推理实测 (Qwen3.8-27B) ==="
+curl -s -X POST http://127.0.0.1:8000/v1/chat/completions \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"mtplx-qwen38-27b-optimized-quality","messages":[{"role":"user","content":"一句话证明你在线"}],"max_tokens":32}' \
+  | "$PYTHON" -c 'import sys, json; print("回答:", json.load(sys.stdin)["choices"][0]["message"]["content"].strip())'

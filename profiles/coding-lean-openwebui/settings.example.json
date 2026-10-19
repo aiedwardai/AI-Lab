@@ -1,0 +1,42 @@
+{
+  "$version": 4,
+  "modelProviders": {
+    "openai": [
+      {
+        "id": "mtplx-qwen38-27b-optimized-quality",
+        "name": "Qwen3.8-27B MTPLX (coding-lean)",
+        "baseUrl": "http://127.0.0.1:8000/v1",
+        "envKey": "OPENAI_API_KEY",
+        "generationConfig": {
+          "contextWindowSize": 81920,
+          "timeout": 600000,
+          "maxRetries": 1,
+          "samplingParams": { "max_tokens": 8192 }
+        }
+      }
+    ]
+  },
+  "model": {
+    "name": "mtplx-qwen38-27b-optimized-quality",
+    "baseUrl": "http://127.0.0.1:8000/v1",
+    "reasoningEffort": "medium",
+    "skipStartupContext": true,
+    "chatCompression": {
+      "maxRecentFilesToRetain": 2,
+      "maxRecentImagesToRetain": 0
+    },
+    "generationConfig": { "contextWindowSize": 81920 }
+  },
+  "context": { "autoCompactThreshold": 0.85 },
+  "tools": {
+    "disabled": [
+      "agent", "artifact", "cron_create", "cron_delete", "cron_list",
+      "display_image", "enter_plan_mode", "enter_worktree", "exit_plan_mode",
+      "exit_worktree", "get_goal", "list_agents", "monitor", "notebook_edit",
+      "read_mcp_resource", "record_artifact", "report_findings", "send_message",
+      "task_stop", "tool_search", "update_goal", "web_fetch", "zoom_image"
+    ],
+    "toolSearch": { "enabled": false }
+  },
+  "mcp": { "excluded": [] }
+}

@@ -1,0 +1,45 @@
+# —— 密钥 / 凭据 ——
+api-key
+*.apikey
+.mtplx/
+
+# —— 运行时产物 / 日志 ——
+*.log
+request-log-*.jsonl
+*.out.log
+logs/
+.mtplx/logs/
+
+# —— 模型权重 / 数据（巨大且含隐私）——
+01_models/
+02_data/
+weights/
+*.gguf
+*.mlx
+searchable/
+*.searchable.pdf
+
+# —— 个人 PDF / 原始资料 ——
+*.pdf
+
+# —— Python ——
+__pycache__/
+*.pyc
+.venv/
+venv/
+envs/
+*.egg-info/
+
+# —— 系统 / 编辑器 ——
+.DS_Store
+.obsidian/
+.idea/
+.vscode/
+
+# —— 项目内部规则（不对外）——
+rule.md
+
+# —— 本地草稿 / 副本 ——
+*副本*
+*副本.md
+*_副本.md

@@ -1,0 +1,38 @@
+#!/bin/bash
+# MTPLX 单实例守护进程启动脚本
+# 职责：生成模型 + 嵌入模型同进程托管，OpenAI 兼容接口，仅回环，带 api-key。
+# 用法：编辑下方 MTRLX_BIN 等变量后 `bash mtplx-serve.sh`（生产用 launchd，见 docs/REPRODUCTION.md）。
+# 回退：删除本文件 + `rm -rf ~/.mtplx/models/<模型目录>` 即可彻底清理。
+set -euo pipefail
+
+# —— 配置（按你的环境修改）——
+# mtplx 可执行文件的【绝对路径】（隔离 venv 内）
+MTRLX_BIN="/ABS/PATH/TO/your/python/venv/bin/mtplx"
+
+# 生成 / 嵌入模型（HuggingFace 官方命名空间；可换其他 Qwen3.8-27B / Embedding 变体）
+GEN_MODEL=Youssofal/Qwen3.8-27B-MTPLX-Optimized-Quality
+EMB_MODEL=mlx-community/Qwen3-Embedding-4B-4bit-DWQ
+
+# 临时镜像绕行（可选）：官方 huggingface.co 不可达时改用 hf-mirror.com
+# 同一份官方命名空间权重，供应链完整性不变；官方源恢复后删掉这一行即可。
+export HF_ENDPOINT=https://hf-mirror.com
+
+# —— 安全：api-key 落盘权限 600，仅本机可读 ——
+API_KEY_FILE=~/.mtplx/api-key
+if [ ! -f "$API_KEY_FILE" ]; then
+  mkdir -p ~/.mtplx
+  openssl rand -hex 16 > "$API_KEY_FILE"
+  chmod 600 "$API_KEY_FILE"
+fi
+API_KEY="$(cat "$API_KEY_FILE")"
+
+# —— 模型（与已确认方案一致）——
+echo "[mtplx] 启动守护进程：生成=$GEN_MODEL 嵌入=$EMB_MODEL 端口=8000 绑定=127.0.0.1"
+echo "[mtplx] API key 已写入 $API_KEY_FILE （前端配置请读此文件）"
+
+exec "$MTRLX_BIN" serve \
+  --model "$GEN_MODEL" \
+  --embedding-model "$EMB_MODEL" \
+  --host 127.0.0.1 \
+  --port 8000 \
+  --api-key "$API_KEY"
