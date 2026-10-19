@@ -1,5 +1,9 @@
 # MTPLX — Apple Silicon 本地 AI 实验室栈
 
+[![CI](https://github.com/aiedwardai/AI-Lab/actions/workflows/ci.yml/badge.svg)](https://github.com/aiedwardai/AI-Lab/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Apple%20Silicon-000000.svg)](https://www.apple.com)
+
 一套面向 Apple Silicon（macOS / arm64）的**隐私优先本地 AI 实验室**部署参考：用自研 `mtplx` 推理服务在**单实例**内同时托管 **Qwen3.8-27B 生成模型**与 **Qwen3-Embedding-4B 嵌入模型**（OpenAI 兼容），并通过**回环 TCP 中继**让 OrbStack 容器内的 Open WebUI、本机 Obsidian（第二大脑 RAG）、以及 PDF 摄取管线共用同一后端。
 
 > 本仓库仅包含**配置示例、脚本与小工具**，不含模型权重、缓存、日志、凭据，也不含 `mtplx` 二进制本身。
@@ -28,7 +32,9 @@
 - `docs/` — 架构、安全与隐私、Open WebUI 接入、第二大脑（Obsidian RAG）、PDF-RAG、图像/视频生成、排障、复现。
 - `profiles/coding-lean-openwebui/` — **可选**：把 Qwen Code 编码 Agent 接到本栈 `:8000` 端点的 Coding-Lean 画像示例。
 - `benchmarks/RESULTS.md` — OCR 调优实测与 27B 吞吐规划估算。
-- `monitor/` — 回环只读监控器设计说明（尚未实装，见内文）。
+- `monitor/` — 回环只读监控器（**已实装**：纯标准库、仅回环、只读，见 [`monitor/README.md`](./monitor/README.md)）。
+- `CONTRIBUTING.md` — 贡献指南（本地校验、无密钥原则）。
+- `README.en.md` — English version.
 
 ## 快速开始
 

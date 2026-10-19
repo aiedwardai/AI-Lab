@@ -30,7 +30,7 @@ jobs:
         run: |
           set -e
           shopt -s nullglob
-          for f in scripts/*.py; do
+          for f in scripts/*.py monitor/*.py; do
             python3 -m py_compile "$f" && echo "OK py: $f"
           done
 
