@@ -1,0 +1,43 @@
+name: CI
+
+# Validates that all shipped scripts and config examples are syntactically
+# sound. This repo ships configuration examples and small stdlib-only tools;
+# we do NOT run the inference server here (no weights, no Apple Silicon in CI).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell syntax check
+        run: |
+          set -e
+          shopt -s nullglob
+          for f in scripts/*.sh.example launcher/*.command.example; do
+            bash -n "$f" && echo "OK bash: $f"
+          done
+
+      - name: Python compile check
+        run: |
+          set -e
+          shopt -s nullglob
+          for f in scripts/*.py; do
+            python3 -m py_compile "$f" && echo "OK py: $f"
+          done
+
+      - name: JSON validity check
+        run: |
+          set -e
+          shopt -s nullglob
+          for f in $(find . -path ./.git -prune -o -name '*.json' -print); do
+            python3 -c "import json,sys; json.load(open('$f'))" && echo "OK json: $f"
+          done
